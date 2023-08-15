@@ -17,12 +17,14 @@ while loop:
         viewMore = driver.find_element(By.CLASS_NAME, 'view-more')
         view = viewMore.find_element(By.TAG_NAME, 'a')
         remain = viewMore.find_element(By.CLASS_NAME, 'remain').text
-
-        if int(remain) >= 20:
-            # print(remain)
+        if int(remain) > 20:
             view.click()
         else:
+            view.click()
             loop = False
+
+        # print(remain)
+
     except ElementClickInterceptedException:
         print('Don\'t load data')
         break
@@ -40,23 +42,36 @@ imgsClass = listProducts.find_elements(By.CLASS_NAME, 'item-img_42')
 productImages = []
 for i in range(0, len(imgsClass)):
     try:
-        img = imgsClass[i].find_element(By.CSS_SELECTOR,'img.thumb')
+        img = imgsClass[i].find_element(By.CSS_SELECTOR,'img')
         productImages.append(img.get_attribute('src'))
     except NoSuchElementException:
         productImages.append("NULL")
+        continue
+    except NoSuchAttributeException:
+        productImages.append("NULL")
+try:
+    productSizes = []
+    for i in range(0, len(productTitles)):
+        size = listProducts.find_element(By.CLASS_NAME,'__cate_42')
+        sizes = size.find_element(By.CLASS_NAME,'gray-bg')
+        productSizes.append(size.text)
+except NoSuchElementException:
+    productSizes.append("NULL")
 
-sizes = listProducts.find_elements(By.CLASS_NAME,'gray-bg')
-productSizes = [size.text for size in sizes]
 
-links = listProducts.find_elements(By.CSS_SELECTOR,'li [data-s]')
+links = listProducts.find_elements(By.CSS_SELECTOR,'li [data-name]')
 productLinks = [link.get_attribute('href') for link in links]
 
 
 productOldPrice,productPercent, productPrice, productSpecialPrice, productStorage = [], [], [], [], []
 
 for i in range(0, len(productTitles)):
-    price = links[i].find_element(By.CLASS_NAME, 'price')
-    productPrice.append(price.text)
+    try:
+        price = links[i].find_element(By.TAG_NAME, 'strong')
+        productPrice.append(price.text)
+    except NoSuchElementException:
+        productPrice.append("NULL")
+
 
 
 for i in range(0, len(productTitles)):
@@ -115,20 +130,25 @@ for i in range(0, len(productTitles)):
 # print(productSpecialPrice)
 # print(len(totalComments))
 # print(totalComments)
-#
+
 productView = pd.DataFrame(list(zip(productTitles, productImages, productLinks, productSizes,productStorage,productPrice,productPercent,productOldPrice,productSpecialPrice, totalComments)), columns=["Title","Image","URL","Size","Storage","Price","Discount","Old Price", "Special Price", "Total Comments"])
 # productView.info()
 # print(productView)
 
 productColor, productRate, productConfiguration = [], [], []
 
-for i in range(0, len(productTitles)):
-
+for i in range(0, 1):
+#
     driver.get(productLinks[i])
 
     # dữ liệu thử nghiệm: sản phẩm đầu tiên
     # driver.get(productLinks[0])
 
+    try:
+        color = driver.find_element(By.CLASS_NAME, 'box03.color.group.desk').text
+        productColor.append(color)
+    except NoSuchElementException:
+        productColor.append("NULL")
     point = driver.find_element(By.CLASS_NAME, 'point')
     rate = point.find_element(By.TAG_NAME, 'p').text
     productRate.append(rate)
@@ -138,21 +158,16 @@ for i in range(0, len(productTitles)):
 
     # print(productColor)
     # print(productRate)
-    # print(parameters.text)
+    # print(productConfiguration)
 
     detailProduct = pd.DataFrame(list(zip(productColor, productRate, productConfiguration)), columns= ["Color", "Rate", "Configuration"])
-    # detailProduct.info
+    # detailProduct.info()
 
     Product = pd.concat([productView, detailProduct], axis=1)
-    Product.info()
-
-    try:
-        color = driver.find_element(By.CLASS_NAME, 'box03.color.group.desk').text
-        productColor.append(color)
-    except NoSuchElementException:
-        productColor.append("NULL")
-
-    # Lấy các comment về sản phẩm
+    # Product.info()
+    # print(Product.head(1).T)
+#
+#     # Lấy các comment về sản phẩm
     cmtProduct = []
     try:
         more = driver.find_element(By.CLASS_NAME, 'box-flex')
@@ -174,7 +189,7 @@ for i in range(0, len(productTitles)):
         cmtLikes = [like.find_element(By.TAG_NAME, 'a').text for like in likes]
 
         cmtProduct.append(productTitles[i])
-
+#
     except ElementClickInterceptedException:
         cmtNames, confirmBuy, cmtContents, cmtLikes = [], [], [], []
 
@@ -184,15 +199,16 @@ for i in range(0, len(productTitles)):
 # print(cmtLikes)
 
 productDetailComments = pd.DataFrame(list(zip(cmtProduct, cmtNames, confirmBuy, cmtContents, cmtLikes)),columns=["Title", "Name", "Confirm Buy", "Content", "Likes"])
-productDetailComments.info()
+# productDetailComments.info()
 # print(productDetailComments)
 
 Smartphone = pd.merge(Product, productDetailComments, on="Title", how= "left")
 
 Smartphone.info()
-print(Smartphone)
+print(Smartphone.head(1).T)
+# print(Smartphone)
 
-time.sleep(10)
-driver.quit()
+time.sleep(30)
+# driver.quit()
 
 
