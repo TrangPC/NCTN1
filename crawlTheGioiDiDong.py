@@ -42,7 +42,7 @@ imgsClass = listProducts.find_elements(By.CLASS_NAME, 'item-img_42')
 productImages = []
 for i in range(0, len(imgsClass)):
     try:
-        img = imgsClass[i].find_element(By.CSS_SELECTOR,'img')
+        img = imgsClass[i].find_element(By.CSS_SELECTOR,'img [alt]')
         productImages.append(img.get_attribute('src'))
     except NoSuchElementException:
         productImages.append("NULL")
@@ -137,7 +137,7 @@ productView = pd.DataFrame(list(zip(productTitles, productImages, productLinks, 
 
 productColor, productRate, productConfiguration = [], [], []
 
-for i in range(0, 1):
+for i in range(0, len(productTitles)):
 #
     driver.get(productLinks[i])
 
